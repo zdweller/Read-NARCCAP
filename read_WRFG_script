@@ -1,0 +1,189 @@
+#install.packages("ncdf")
+library(ncdf)
+library(fields)
+setwd("~/Documents/WRFG")
+
+#Read the files
+nc81 <- open.ncdf("~/Documents/WRFG/tas_WRFG_ncep_1981010103.nc")
+nc86 <- open.ncdf("~/Documents/WRFG/tas_WRFG_ncep_1986010103.nc")
+nc91 <- open.ncdf("~/Documents/WRFG/tas_WRFG_ncep_1991010103.nc")
+nc96 <- open.ncdf("~/Documents/WRFG/tas_WRFG_ncep_1996010103.nc")
+nc01 <- open.ncdf("~/Documents/WRFG/tas_WRFG_ncep_2001010103.nc")
+nc01
+
+year.avg <- list()
+lcount <- 1
+#1981
+years <- 1981:1985
+start <- 1
+for(i in 1:5)
+{
+	cyear <- years[i]
+	if(cyear %% 4 == 0)
+	{
+		count.end <- 2928
+	}
+	if(cyear %% 4 != 0)
+	{
+		count.end <- 2920
+	}
+	
+	year.data <- get.var.ncdf(nc81, "tas", start = c(1,1,start), count = c(-1,-1, count.end))
+	cy.avg <- apply(year.data, c(1,2), mean, na.rm = T)
+	year.avg[[lcount]] <- cy.avg
+
+	if( cyear %% 4 == 0)
+	{
+		start <- start + 2928
+	}
+	if( cyear %% 4 != 0)
+	{
+		start <- start + 2920
+	}
+	
+	lcount <- lcount + 1
+} 
+#1986 - 1990
+years <- 1986:1990
+start <- 1
+for(i in 1:5)
+{
+	cyear <- years[i]
+	if(cyear %% 4 == 0)
+	{
+		count.end <- 2928
+	}
+	else
+	{
+		count.end <- 2920
+	}
+	
+	year.data <- get.var.ncdf(nc86, "tas", start = c(1,1,start), count = c(-1,-1, count.end))
+	cy.avg <- apply(year.data, c(1,2), mean, na.rm = T)
+	year.avg[[lcount]] <- cy.avg
+
+	if(cyear %% 4 == 0)
+	{
+		start <- start + 2928
+	}
+	else
+	{
+		start <- start + 2920
+	}
+	
+	lcount <- lcount + 1
+} 
+#1991 - 1995
+years <- 1991:1995
+start <- 1
+for(i in 1:5)
+{
+	cyear <- years[i]
+	if(cyear %% 4 == 0)
+	{
+		count.end <- 2928
+	}
+	else
+	{
+		count.end <- 2920
+	}
+	
+	year.data <- get.var.ncdf(nc91, "tas", start = c(1,1,start), count = c(-1,-1, count.end))
+	cy.avg <- apply(year.data, c(1,2), mean, na.rm = T)
+	year.avg[[lcount]] <- cy.avg
+
+	if(cyear %% 4 == 0)
+	{
+		start <- start + 2928
+	}
+	else
+	{
+		start <- start + 2920
+	}
+	
+	lcount <- lcount + 1
+} 
+#1996 - 2000
+years <- 1996:2000
+start <- 1
+for(i in 1:5)
+{
+	cyear <- years[i]
+	if(cyear %% 4 == 0)
+	{
+		count.end <- 2928
+	}
+	else
+	{
+		count.end <- 2920
+	}
+	
+	year.data <- get.var.ncdf(nc96, "tas", start = c(1,1,start), count = c(-1,-1, count.end))
+	cy.avg <- apply(year.data, c(1,2), mean, na.rm = T)
+	year.avg[[lcount]] <- cy.avg
+
+	if(cyear %% 4 == 0)
+	{
+		start <- start + 2928
+	}
+	else
+	{
+		start <- start + 2920
+	}
+	
+	lcount <- lcount + 1
+} 
+#2001 - 2004
+years <- 2001:2004
+start <- 1
+for(i in 1:4)
+{
+	cyear <- years[i]
+	count.end <- 2920
+	
+	year.data <- get.var.ncdf(nc01, "tas", start = c(1,1,start), count = c(-1,-1, count.end))
+	cy.avg <- apply(year.data, c(1,2), mean, na.rm = T)
+	year.avg[[lcount]] <- cy.avg
+
+	start <- start + 2920
+
+	lcount <- lcount + 1
+} 
+
+length(1981:2004)
+length(year.avg)
+
+year.avg.arr <- array(data = NA, dim = c(134, 109, 24))
+for(i in 1:24)
+{
+	year.avg.arr[,,i] <- year.avg[[i]]
+}
+
+avg24 <- apply(year.avg.arr, c(1,2), mean)
+dim(avg24)
+
+lon <- get.var.ncdf(nc81, "lon")
+lat <- get.var.ncdf(nc81, "lat")
+#lcoords <- expand.grid(lon, lat)
+image.plot(lon-360, lat, avg24)
+world(add = T)
+
+hist(avg24)
+
+xc <- get.var.ncdf(nc81, "xc")
+length(xc)
+yc <- get.var.ncdf(nc81, "yc")
+
+image.plot(xc, yc, avg24)
+coords <- expand.grid(xc,yc)
+
+WRFG.NCEP.tas <- avg24
+bad.list <- c("avg24","coords", "count.end", "cy.avg", "cyear","i",
+"lcount", "nc01", "nc81", "nc86", "nc91","nc96","start","year.avg","year.avg.arr",
+"year.data","years")
+rm(list = bad.list)
+rm("bad.list")
+ls()
+WRFG <- list("lon" = lon, "lat" = lat, "xc" = xc, "yc" = yc, "WRFG.NCEP.tas" = WRFG.NCEP.tas)
+rm(list = c("lon", "lat", "xc", "yc", "WRFG.NCEP.tas"))
+save.image("WRFG.Rdata")
